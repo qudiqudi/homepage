@@ -1,0 +1,56 @@
+name: Sync with Upstream Homepage
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: feat/snowflake-widget
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/gethomepage/homepage.git || true
+          git fetch upstream
+
+      - name: Merge upstream changes
+        id: merge
+        run: |
+          # Try to merge upstream/dev into our branch
+          git merge upstream/dev --no-edit || {
+            echo "merge_conflict=true" >> $GITHUB_OUTPUT
+            exit 1
+          }
+
+      - name: Push changes
+        if: steps.merge.outcome == 'success'
+        run: |
+          git push origin feat/snowflake-widget
+
+      - name: Create issue on conflict
+        if: steps.merge.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Upstream sync conflict detected',
+              body: 'The automated sync from gethomepage/homepage encountered merge conflicts. Manual resolution required.\n\nRun locally:\n```bash\ngit fetch upstream\ngit merge upstream/dev\n# Resolve conflicts\ngit push origin feat/snowflake-widget\n```',
+              labels: ['sync-conflict']
+            })
