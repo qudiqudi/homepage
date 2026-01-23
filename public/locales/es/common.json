@@ -794,10 +794,10 @@
         "series": "Series"
     },
     "booklore": {
-        "libraries": "Libraries",
-        "books": "Books",
-        "reading": "Reading",
-        "finished": "Finished"
+        "libraries": "Librerías",
+        "books": "Libros",
+        "reading": "Lectura",
+        "finished": "Finalizado"
     },
     "jdownloader": {
         "downloadCount": "En cola",

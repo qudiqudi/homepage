@@ -794,10 +794,10 @@
         "series": "Reekse"
     },
     "booklore": {
-        "libraries": "Libraries",
-        "books": "Books",
-        "reading": "Reading",
-        "finished": "Finished"
+        "libraries": "Biblioteke",
+        "books": "Boeke",
+        "reading": "Lees",
+        "finished": "Klaar"
     },
     "jdownloader": {
         "downloadCount": "Tou",
