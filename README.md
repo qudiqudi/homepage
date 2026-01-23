@@ -1,183 +1,146 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/banner_light@2x.png">
-    <img src="images/banner_dark@2x.png" width="65%">
-  </picture>
-</p>
+# Custom Homepage Fork with Snowflake Widget
 
-<p align="center">
-  A modern, <em>fully static, fast</em>, secure <em>fully proxied</em>, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery.
-</p>
+This is a custom fork of [Homepage](https://github.com/gethomepage/homepage) that includes a Tor Snowflake Proxy widget.
 
-<p align="center">
-  <img src="images/1.png?v=2" />
-</p>
+## What's Different
 
-<p align="center">
-  <a href="https://github.com/gethomepage/homepage/actions/workflows/docker-publish.yml"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/gethomepage/homepage/docker-publish.yml"></a>
-  &nbsp;
-  <a href="https://crowdin.com/project/gethomepage" target="_blank"><img src="https://badges.crowdin.net/gethomepage/localized.svg"></a>
-  &nbsp;
-  <a href="https://discord.gg/k4ruYNrudu"><img alt="Discord" src="https://img.shields.io/discord/1019316731635834932"></a>
-  &nbsp;
-  <a href="https://gethomepage.dev/" title="Docs"><img title="Docs" src="https://github.com/gethomepage/homepage/actions/workflows/docs-publish.yml/badge.svg"/></a>
-  &nbsp;
-  <a href="https://paypal.me/phelpsben" title="Donate"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/benphelps"></a>
-</p>
+- **Snowflake Widget**: Native widget for monitoring Tor Snowflake Proxy metrics
+- **Auto-sync**: Daily automatic sync with upstream Homepage to get latest features
+- **Pre-built Images**: Automatically built Docker images published to GitHub Container Registry
 
-<p align="center">
-  <a href="https://www.digitalocean.com/?refcode=df14bcb7c016&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://web-platforms.sfo2.cdn.digitaloceanspaces.com/WWW/Badge%201.svg" alt="DigitalOcean Referral Badge" /></a>
-</p>
-<p align="center">
-<em>Homepage builds are kindly powered by DigitalOcean.</em>
-</p>
+## Using This Fork
 
-# Features
+### Option 1: Use Pre-built Docker Image (Recommended)
 
-With features like quick search, bookmarks, weather support, a wide range of integrations and widgets, an elegant and modern design, and a focus on performance, Homepage is your ideal start to the day and a handy companion throughout it.
-
-- **Fast** - The site is statically generated at build time for instant load times.
-- **Secure** - All API requests to backend services are proxied, keeping your API keys hidden. Constantly reviewed for security by the community.
-- **For Everyone** - Images built for AMD64, ARM64.
-- **Full i18n** - Support for over 40 languages.
-- **Service & Web Bookmarks** - Add custom links to the homepage.
-- **Docker Integration** - Container status and stats. Automatic service discovery via labels.
-- **Service Integration** - Over 100 service integrations, including popular starr and self-hosted apps.
-- **Information & Utility Widgets** - Weather, time, date, search, and more.
-- **And much more...**
-
-## Docker Integration
-
-Homepage has built-in support for Docker, and can automatically discover and add services to the homepage based on labels. See the [Docker Service Discovery](https://gethomepage.dev/configs/docker/#automatic-service-discovery) page for more information.
-
-## Service Widgets
-
-Homepage also has support for hundreds of 3rd-party services, including all popular \*arr apps, and most popular self-hosted apps. Some examples include: Radarr, Sonarr, Lidarr, Bazarr, Ombi, Tautulli, Plex, Jellyfin, Emby, Transmission, qBittorrent, Deluge, Jackett, NZBGet, SABnzbd, etc. As well as service integrations, Homepage also has a number of information providers, sourcing information from a variety of external 3rd-party APIs. See the [Service](https://gethomepage.dev/widgets/) page for more information.
-
-## Information Widgets
-
-Homepage has built-in support for a number of information providers, including weather, time, date, search, glances and more. System and status information presented at the top of the page. See the [Information Providers](https://gethomepage.dev/widgets/) page for more information.
-
-## Customization
-
-Homepage is highly customizable, with support for custom themes, custom CSS & JS, custom layouts, formatting, localization and more. See the [Settings](https://gethomepage.dev/configs/settings/) page for more information.
-
-# Getting Started
-
-For configuration options, examples and more, [please check out the homepage documentation](http://gethomepage.dev).
-
-## Security Notice 🔒
-
-Please note that when using features such as widgets, Homepage can access personal information (for example from your home automation system) and Homepage currently does not (and is not planned to) include any authentication layer itself. If Homepage is reachable from any untrusted network, it **must** sit behind a reverse proxy (and/or VPN) that enforces authentication, TLS, and strictly validates Host headers. The built-in host check in Homepage is a best-effort guard and should not be treated as security when exposed publicly.
-
-## With Docker
-
-Using docker compose:
+Update your `docker-compose.yml`:
 
 ```yaml
-services:
-  homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
-    environment:
-      HOMEPAGE_ALLOWED_HOSTS: gethomepage.dev # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
-      PUID: 1000 # optional, your user id
-      PGID: 1000 # optional, your group id
-    ports:
-      - 3000:3000
-    volumes:
-      - /path/to/config:/app/config # Make sure your local config directory exists
-      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
-    restart: unless-stopped
+homepage:
+  image: ghcr.io/qudiqudi/homepage:snowflake
+  container_name: homepage
+  # ... rest of your config
 ```
 
-or docker run:
+The image is automatically rebuilt when:
+- Upstream Homepage releases updates (daily sync)
+- Changes are pushed to this fork
+
+### Option 2: Build Yourself
+
+Clone and build:
 
 ```bash
-docker run --name homepage \
-  -e HOMEPAGE_ALLOWED_HOSTS=gethomepage.dev \
-  -e PUID=1000 \
-  -e PGID=1000 \
-  -p 3000:3000 \
-  -v /path/to/config:/app/config \
-  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  --restart unless-stopped \
-  ghcr.io/gethomepage/homepage:latest
+git clone https://github.com/qudiqudi/homepage.git
+cd homepage
+git checkout feat/snowflake-widget
+docker build -t homepage-custom .
 ```
 
-## From Source
+## Snowflake Widget Configuration
 
-First, clone the repository:
+Add to your `services.yaml`:
+
+```yaml
+- Tools:
+  - Snowflake Proxy:
+      icon: mdi-snowflake
+      description: Tor Snowflake Proxy
+      href: https://snowflake.torproject.org/
+      widget:
+        type: snowflake
+        url: http://172.17.0.1:9199  # Or host.docker.internal:9199
+```
+
+### Docker Compose Setup
+
+Full example with Snowflake proxy:
+
+```yaml
+# Snowflake Proxy
+snowflake-proxy:
+  image: containers.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake:latest
+  container_name: snowflake-proxy
+  network_mode: host
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+  command: ["-metrics", "-metrics-address", "0.0.0.0", "-metrics-port", "9199"]
+
+# Homepage with Snowflake Widget
+homepage:
+  image: ghcr.io/qudiqudi/homepage:snowflake
+  container_name: homepage
+  networks:
+    - bridge_network
+  extra_hosts:
+    - "host.docker.internal:host-gateway"  # For Linux
+  volumes:
+    - ./homepage/config:/app/config
+  restart: unless-stopped
+```
+
+## How Auto-Sync Works
+
+### Daily Sync Workflow
+
+- Runs daily at 2 AM UTC
+- Fetches latest changes from `gethomepage/homepage:dev`
+- Merges into `feat/snowflake-widget` branch
+- Triggers Docker image rebuild
+- If merge conflicts occur, creates a GitHub issue
+
+### Manual Sync
+
+Trigger manually via GitHub Actions:
+1. Go to https://github.com/qudiqudi/homepage/actions
+2. Select "Sync with Upstream Homepage"
+3. Click "Run workflow"
+
+### Handling Conflicts
+
+If auto-sync detects conflicts:
 
 ```bash
-git clone https://github.com/gethomepage/homepage.git
+git clone https://github.com/qudiqudi/homepage.git
+cd homepage
+git checkout feat/snowflake-widget
+git fetch upstream
+git merge upstream/dev
+# Resolve conflicts in your editor
+git add .
+git commit
+git push origin feat/snowflake-widget
 ```
 
-Then install dependencies and build the production bundle:
+## Widget Features
 
-```bash
-pnpm install
-pnpm build
-```
+The Snowflake widget displays:
+- **Connections**: Total successful connections served
+- **Inbound**: Download traffic from clients
+- **Outbound**: Upload traffic to Tor network
+- **Countries**: Number of unique countries helped
 
-If this is your first time starting, copy the `src/skeleton` directory to `config/` to populate initial example config files.
+## Staying Updated
 
-Finally, run the server in production mode:
+Your Homepage will automatically stay up-to-date with:
+- ✅ Latest Homepage features and bug fixes
+- ✅ Snowflake widget improvements
+- ✅ Security patches
 
-```bash
-pnpm start
-```
+No manual intervention needed unless merge conflicts occur.
 
-# Configuration
+## Image Tags
 
-Please refer to the [homepage documentation website](https://gethomepage.dev/) for more information. Everything you need to know about configuring Homepage is there. Please read everything carefully before asking for help, as most questions are answered there or are simple YAML configuration issues.
+- `snowflake` - Latest build from feat/snowflake-widget (recommended)
+- `feat-snowflake-widget` - Same as above
+- `feat-snowflake-widget-<sha>` - Specific commit builds
 
-# Development
+## Support
 
-Install NPM packages, this project uses [pnpm](https://pnpm.io/) (and so should you!):
+- **Upstream Homepage**: https://github.com/gethomepage/homepage
+- **This Fork**: https://github.com/qudiqudi/homepage
+- **Snowflake**: https://snowflake.torproject.org/
 
-```bash
-pnpm install
-```
+## Why This Fork Exists
 
-Start the development server:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to start.
-
-This is a [Next.js](https://nextjs.org/) application, see their documentation for more information.
-
-# Documentation
-
-The homepage documentation is available at [https://gethomepage.dev/](https://gethomepage.dev/).
-
-Homepage uses Material for MkDocs for documentation. To run the documentation locally, first install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Then run the development server:
-
-```bash
-mkdocs serve # or build, to build the static site
-```
-
-# Support & Suggestions
-
-If you have any questions, suggestions, or general issues, please start a discussion on the [Discussions](https://github.com/gethomepage/homepage/discussions) page.
-
-## Troubleshooting
-
-In addition to the docs, the [troubleshooting guide](https://gethomepage.dev/troubleshooting/) can help reveal many basic config or network issues. If you're having a problem, it's a good place to start.
-
-## Contributing & Contributors
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
-Thanks to the over 200 contributors who have helped make this project what it is today!
-
-Especially huge thanks to [@shamoon](https://github.com/shamoon), who has been the backbone of this community from the very start.
+The Snowflake widget PR was not accepted by the upstream project. This fork maintains the widget while staying synchronized with upstream Homepage development.
