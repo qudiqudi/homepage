@@ -3,7 +3,7 @@ name: Build Custom Homepage with Snowflake
 on:
   push:
     branches:
-      - feat/snowflake-widget
+      - latest
   workflow_dispatch:
 
 env:
@@ -37,10 +37,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=snowflake
+            type=raw,value=latest
+            type=sha,prefix=latest-
 
       - name: Build and push
         uses: docker/build-push-action@v5
