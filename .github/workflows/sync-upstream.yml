@@ -62,9 +62,22 @@ jobs:
           fi
 
           # After merge, check if any workflow files were modified and revert them
-          if git diff --name-only $BEFORE_MERGE HEAD | grep -q "^.github/workflows/"; then
+          MODIFIED_WORKFLOWS=$(git diff --name-only $BEFORE_MERGE HEAD | grep "^.github/workflows/" || true)
+          if [ -n "$MODIFIED_WORKFLOWS" ]; then
             echo "Workflow files were modified, reverting to our versions"
+            echo "$MODIFIED_WORKFLOWS"
+
+            # Reset workflow directory to our version
             git checkout $BEFORE_MERGE -- .github/workflows/
+
+            # Check if any workflow files were added that we don't have
+            git diff --name-only --diff-filter=A $BEFORE_MERGE HEAD | grep "^.github/workflows/" | while read -r file; do
+              echo "Removing new workflow file: $file"
+              git rm --cached "$file" 2>/dev/null || true
+              rm -f "$file"
+            done
+
+            # Amend the merge commit
             git commit --amend --no-edit
           fi
 
