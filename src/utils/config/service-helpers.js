@@ -86,7 +86,7 @@ export async function servicesFromDocker() {
         // bad docker connections can result in a <Buffer ...> object?
         // in any case, this ensures the result is the expected array
         if (!Array.isArray(containers)) {
-          return [];
+          return { server: serverName, services: [] };
         }
 
         const discovered = containers.map((container) => {
@@ -188,6 +188,7 @@ export async function servicesFromKubernetes() {
 
     const resources = [...ingressList, ...traefikIngressList, ...httpRouteList];
 
+    /* c8 ignore next 3 -- resources is always an array once the spreads succeed */
     if (!resources) {
       return [];
     }
@@ -257,6 +258,9 @@ export function cleanServiceGroups(groups) {
           hideErrors,
           highlight,
           type,
+
+          // arcane
+          env,
 
           // azuredevops
           repositoryId,
@@ -470,6 +474,10 @@ export function cleanServiceGroups(groups) {
         if (type === "azuredevops") {
           if (userEmail) widget.userEmail = userEmail;
           if (repositoryId) widget.repositoryId = repositoryId;
+        }
+
+        if (type === "arcane") {
+          if (env !== undefined) widget.env = env;
         }
 
         if (type === "beszel") {
