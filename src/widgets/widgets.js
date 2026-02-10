@@ -131,6 +131,7 @@ import tandoor from "./tandoor/widget";
 import tautulli from "./tautulli/widget";
 import tdarr from "./tdarr/widget";
 import technitium from "./technitium/widget";
+import tracearr from "./tracearr/widget";
 import traefik from "./traefik/widget";
 import transmission from "./transmission/widget";
 import trilium from "./trilium/widget";
@@ -287,6 +288,7 @@ const widgets = {
   tautulli,
   technitium,
   tdarr,
+  tracearr,
   traefik,
   transmission,
   trilium,
