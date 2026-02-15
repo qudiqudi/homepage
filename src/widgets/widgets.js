@@ -56,7 +56,6 @@ import immich from "./immich/widget";
 import jackett from "./jackett/widget";
 import jdownloader from "./jdownloader/widget";
 import jellyfin from "./jellyfin/widget";
-import jellyseerr from "./jellyseerr/widget";
 import jellystat from "./jellystat/widget";
 import karakeep from "./karakeep/widget";
 import kavita from "./kavita/widget";
@@ -116,6 +115,7 @@ import romm from "./romm/widget";
 import rutorrent from "./rutorrent/widget";
 import sabnzbd from "./sabnzbd/widget";
 import scrutiny from "./scrutiny/widget";
+import seerr from "./seerr/widget";
 import slskd from "./slskd/widget";
 import snowflake from "./snowflake/widget";
 import sonarr from "./sonarr/widget";
@@ -213,7 +213,7 @@ const widgets = {
   jackett,
   jdownloader,
   jellyfin,
-  jellyseerr,
+  jellyseerr: seerr,
   jellystat,
   kavita,
   komga,
@@ -273,6 +273,7 @@ const widgets = {
   rutorrent,
   sabnzbd,
   scrutiny,
+  seerr,
   slskd,
   snowflake,
   sonarr,
