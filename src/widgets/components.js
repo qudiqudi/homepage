@@ -128,6 +128,7 @@ const components = {
   slskd: dynamic(() => import("./slskd/component")),
   snowflake: dynamic(() => import("./snowflake/component")),
   sonarr: dynamic(() => import("./sonarr/component")),
+  sparkyfitness: dynamic(() => import("./sparkyfitness/component")),
   speedtest: dynamic(() => import("./speedtest/component")),
   spoolman: dynamic(() => import("./spoolman/component")),
   stash: dynamic(() => import("./stash/component")),

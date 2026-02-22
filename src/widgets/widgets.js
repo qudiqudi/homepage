@@ -118,6 +118,7 @@ import seerr from "./seerr/widget";
 import slskd from "./slskd/widget";
 import snowflake from "./snowflake/widget";
 import sonarr from "./sonarr/widget";
+import sparkyfitness from "./sparkyfitness/widget";
 import speedtest from "./speedtest/widget";
 import spoolman from "./spoolman/widget";
 import stash from "./stash/widget";
@@ -276,6 +277,7 @@ const widgets = {
   slskd,
   snowflake,
   sonarr,
+  sparkyfitness,
   speedtest,
   spoolman,
   stash,
