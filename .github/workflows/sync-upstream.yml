@@ -41,12 +41,17 @@ jobs:
             # Handle conflicts
             CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
 
-            # Always keep our versions of these files
+            # Always keep our versions of these files (README, workflows)
             echo "$CONFLICTED_FILES" | grep -E "^README.md$|^.github/workflows/" | while read -r file; do
-              if [ -f "$file" ]; then
+              # Check if file exists on our side (--ours)
+              if git show :2:"$file" > /dev/null 2>&1; then
                 echo "Keeping our version of $file"
                 git checkout --ours "$file"
                 git add "$file"
+              else
+                # We deleted this file, keep it deleted
+                echo "Keeping $file deleted (modify/delete conflict)"
+                git rm -f "$file" 2>/dev/null || true
               fi
             done
 
@@ -67,14 +72,15 @@ jobs:
             echo "Workflow files were modified, reverting to our versions"
             echo "$MODIFIED_WORKFLOWS"
 
-            # Reset workflow directory to our version
-            git checkout $BEFORE_MERGE -- .github/workflows/
-
-            # Check if any workflow files were added that we don't have
-            git diff --name-only --diff-filter=A $BEFORE_MERGE HEAD | grep "^.github/workflows/" | while read -r file; do
-              echo "Removing new workflow file: $file"
-              git rm --cached "$file" 2>/dev/null || true
-              rm -f "$file"
+            # For each modified workflow, restore our version or remove if we didn't have it
+            echo "$MODIFIED_WORKFLOWS" | while read -r file; do
+              if git cat-file -e "$BEFORE_MERGE:$file" 2>/dev/null; then
+                git checkout $BEFORE_MERGE -- "$file"
+              else
+                echo "Removing workflow file we don't have: $file"
+                git rm -f "$file" 2>/dev/null || true
+                rm -f "$file"
+              fi
             done
 
             # Amend the merge commit
@@ -95,6 +101,14 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'Upstream sync conflict detected',
-              body: 'The automated sync from gethomepage/homepage encountered merge conflicts. Manual resolution required.\n\nRun locally:\n```bash\ngit fetch upstream\ngit merge upstream/dev\n# Resolve conflicts\ngit push origin feat/snowflake-widget\n```',
+              body: 'The automated sync from gethomepage/homepage encountered merge conflicts. Manual resolution required.
+
+Run locally:
+```bash
+git fetch upstream
+git merge upstream/dev
+# Resolve conflicts
+git push origin latest
+```',
               labels: ['sync-conflict']
             })
