@@ -2,9 +2,8 @@ name: Sync with Upstream Homepage
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -33,46 +32,36 @@ jobs:
       - name: Merge upstream changes
         id: merge
         run: |
-          # Store the current HEAD
           BEFORE_MERGE=$(git rev-parse HEAD)
 
-          # Try to merge upstream/dev into our branch
           if ! git merge upstream/dev --no-edit; then
-            # Handle conflicts
             CONFLICTED_FILES=$(git diff --name-only --diff-filter=U)
 
-            # Always keep our versions of these files (README, workflows)
             echo "$CONFLICTED_FILES" | grep -E "^README.md$|^.github/workflows/" | while read -r file; do
-              # Check if file exists on our side (--ours)
               if git show :2:"$file" > /dev/null 2>&1; then
                 echo "Keeping our version of $file"
                 git checkout --ours "$file"
                 git add "$file"
               else
-                # We deleted this file, keep it deleted
                 echo "Keeping $file deleted (modify/delete conflict)"
                 git rm -f "$file" 2>/dev/null || true
               fi
             done
 
-            # Check if there are other conflicts remaining
             if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
               echo "Other conflicts detected beyond README.md and workflows"
               echo "merge_conflict=true" >> $GITHUB_OUTPUT
               exit 1
             fi
 
-            # Complete the merge
             git commit --no-edit
           fi
 
-          # After merge, check if any workflow files were modified and revert them
           MODIFIED_WORKFLOWS=$(git diff --name-only $BEFORE_MERGE HEAD | grep "^.github/workflows/" || true)
           if [ -n "$MODIFIED_WORKFLOWS" ]; then
             echo "Workflow files were modified, reverting to our versions"
             echo "$MODIFIED_WORKFLOWS"
 
-            # For each modified workflow, restore our version or remove if we didn't have it
             echo "$MODIFIED_WORKFLOWS" | while read -r file; do
               if git cat-file -e "$BEFORE_MERGE:$file" 2>/dev/null; then
                 git checkout $BEFORE_MERGE -- "$file"
@@ -83,7 +72,6 @@ jobs:
               fi
             done
 
-            # Amend the merge commit
             git commit --amend --no-edit
           fi
 
@@ -101,15 +89,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'Upstream sync conflict detected',
-              body: 'The automated sync from gethomepage/homepage encountered merge conflicts. Manual resolution required.
-
-Run locally:
-```bash
-git fetch upstream
-git merge upstream/dev
-# Resolve conflicts
-git push origin latest
-```',
+              body: 'The automated sync from gethomepage/homepage encountered merge conflicts. Manual resolution required.\n\nRun locally:\n```bash\ngit fetch upstream\ngit merge upstream/dev\n# Resolve conflicts\ngit push origin latest\n```',
               labels: ['sync-conflict']
             })
-
