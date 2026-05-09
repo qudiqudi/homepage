@@ -1,6 +1,6 @@
 {
   "name": "homepage",
-  "version": "1.12.3",
+  "version": "1.13.0",
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -74,12 +74,5 @@
   },
   "optionalDependencies": {
     "osx-temperature-sensor": "^1.0.8"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@tailwindcss/oxide",
-      "osx-temperature-sensor",
-      "sharp"
-    ]
   }
 }
