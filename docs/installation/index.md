@@ -47,18 +47,28 @@ Required environment variables for authentication:
 
 - `HOMEPAGE_AUTH_ENABLED=true`
 - `HOMEPAGE_AUTH_SECRET` (random string for signing/encrypting cookies)
+- `HOMEPAGE_EXTERNAL_URL` (the absolute URL used to access Homepage, including scheme and port when needed)
+
+Use an `https://` URL for public or TLS-terminated deployments so authentication cookies are marked `Secure`. Trusted HTTP-only LAN deployments may use an `http://` URL.
 
 For password-only login:
 
-- `HOMEPAGE_AUTH_PASSWORD` (password-only login; required unless OIDC settings are provided)
+- `HOMEPAGE_AUTH_PASSWORD` (a strong, unique password; required unless OIDC settings are provided)
+
+!!! warning
+
+    Homepage does not apply application-level rate limiting to password attempts. Deployments exposed outside a trusted network should configure their reverse proxy or ingress to rate limit POST requests to `/api/auth/callback/credentials`.
 
 For OIDC login (overrides password login):
 
 - `HOMEPAGE_OIDC_ISSUER` (OIDC issuer URL, e.g., `https://auth.example.com/realms/homepage`)
 - `HOMEPAGE_OIDC_CLIENT_ID`
 - `HOMEPAGE_OIDC_CLIENT_SECRET`
-- `HOMEPAGE_EXTERNAL_URL` (external URL to your Homepage instance; used for callbacks)
 - Optional: `HOMEPAGE_OIDC_NAME` (display name), `HOMEPAGE_OIDC_SCOPE` (defaults to `openid email profile`)
+
+!!! warning
+
+    Homepage grants access to any identity that the configured OIDC provider authorizes for this client. Configure client assignments, groups, or access policies at the identity provider. Homepage does not apply additional claim-based authorization.
 
 All app pages and `/api` routes except `/api/healthcheck` will require a signed-in session. Static assets remain public.
 

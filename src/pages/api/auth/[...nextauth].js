@@ -1,7 +1,9 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+
+import createLogger from "utils/logger";
 
 const authEnabled = Boolean(process.env.HOMEPAGE_AUTH_ENABLED);
 const issuer = process.env.HOMEPAGE_OIDC_ISSUER;
@@ -10,6 +12,9 @@ const clientSecret = process.env.HOMEPAGE_OIDC_CLIENT_SECRET;
 const homepageAuthSecret = process.env.HOMEPAGE_AUTH_SECRET;
 const homepageExternalUrl = process.env.HOMEPAGE_EXTERNAL_URL;
 const homepageAuthPassword = process.env.HOMEPAGE_AUTH_PASSWORD;
+const homepageAuthPasswordDigest = homepageAuthPassword
+  ? createHash("sha256").update(homepageAuthPassword, "utf8").digest()
+  : null;
 
 // Map HOMEPAGE_* envs to what NextAuth expects
 if (!process.env.NEXTAUTH_SECRET && homepageAuthSecret) {
@@ -23,10 +28,33 @@ const defaultScope = process.env.HOMEPAGE_OIDC_SCOPE || "openid email profile";
 const cleanedIssuer = issuer ? issuer.replace(/\/+$/, "") : issuer;
 const hasOidcConfig = Boolean(issuer && clientId && clientSecret);
 const hasAnyOidcConfig = Boolean(issuer || clientId || clientSecret);
+let parsedAuthUrl;
 
 if (authEnabled) {
+  if (!process.env.NEXTAUTH_URL) {
+    throw new Error("Homepage auth is enabled but HOMEPAGE_EXTERNAL_URL (or NEXTAUTH_URL) is missing.");
+  }
+
+  try {
+    parsedAuthUrl = new URL(process.env.NEXTAUTH_URL);
+  } catch {
+    throw new Error("HOMEPAGE_EXTERNAL_URL (or NEXTAUTH_URL) must be an absolute HTTP(S) URL.");
+  }
+
+  if (
+    !["http:", "https:"].includes(parsedAuthUrl.protocol) ||
+    parsedAuthUrl.username ||
+    parsedAuthUrl.password ||
+    parsedAuthUrl.search ||
+    parsedAuthUrl.hash
+  ) {
+    throw new Error(
+      "HOMEPAGE_EXTERNAL_URL (or NEXTAUTH_URL) must be an absolute HTTP(S) URL without credentials, query, or fragment.",
+    );
+  }
+
   if (hasOidcConfig) {
-    if (!process.env.NEXTAUTH_SECRET || !process.env.NEXTAUTH_URL) {
+    if (!process.env.NEXTAUTH_SECRET) {
       throw new Error("OIDC auth is enabled but required settings are missing.");
     }
   } else if (hasAnyOidcConfig) {
@@ -45,6 +73,7 @@ if (authEnabled) {
         name: process.env.HOMEPAGE_OIDC_NAME || "Homepage OIDC",
         type: "oauth",
         idToken: true,
+        checks: ["pkce", "state"],
         issuer: cleanedIssuer,
         wellKnown: `${cleanedIssuer}/.well-known/openid-configuration`,
         clientId,
@@ -72,12 +101,12 @@ if (authEnabled) {
           password: { label: "Password", type: "password" },
         },
         async authorize(credentials) {
-          const provided = credentials?.password ?? "";
-          const expected = homepageAuthPassword ?? "";
-          if (!expected || provided.length !== expected.length) {
+          const provided = credentials?.password;
+          if (!homepageAuthPasswordDigest || typeof provided !== "string") {
             return null;
           }
-          const isMatch = timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+          const providedDigest = createHash("sha256").update(provided, "utf8").digest();
+          const isMatch = timingSafeEqual(providedDigest, homepageAuthPasswordDigest);
           if (!isMatch) {
             return null;
           }
@@ -97,19 +126,19 @@ export const authOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  useSecureCookies: parsedAuthUrl?.protocol === "https:",
   pages: {
     signIn: "/auth/signin",
   },
-  debug: true,
   logger: {
-    error: (...args) => console.error("[nextauth][error]", ...args),
-    warn: (...args) => console.warn("[nextauth][warn]", ...args),
-    debug: (...args) => console.debug("[nextauth][debug]", ...args),
+    error: (code) => createLogger("nextauth").error("%s", code),
+    warn: (code) => createLogger("nextauth").warn("%s", code),
+    debug: (code) => createLogger("nextauth").debug("%s", code),
   },
   events: {
-    signIn: async (message) => console.debug("[nextauth][event][signIn]", message),
-    signOut: async (message) => console.debug("[nextauth][event][signOut]", message),
-    error: async (message) => console.error("[nextauth][event][error]", message),
+    signIn: async ({ account }) =>
+      createLogger("nextauth").debug("Sign in via provider '%s'", account?.provider ?? "unknown"),
+    signOut: async () => createLogger("nextauth").debug("Sign out"),
   },
 };
 
