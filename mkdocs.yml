@@ -103,6 +103,7 @@ nav:
           - widgets/services/lubelogger.md
           - widgets/services/mastodon.md
           - widgets/services/mailcow.md
+          - widgets/services/maintainerr.md
           - widgets/services/mealie.md
           - widgets/services/medusa.md
           - widgets/services/mikrotik.md
@@ -159,6 +160,7 @@ nav:
           - widgets/services/sparkyfitness.md
           - widgets/services/speedtest-tracker.md
           - widgets/services/spoolman.md
+          - widgets/services/sportarr.md
           - widgets/services/stash.md
           - widgets/services/stocks.md
           - widgets/services/suwayomi.md
