@@ -3,9 +3,12 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+import { isAuthEnabled } from "utils/env";
 import createLogger from "utils/logger";
 
-const authEnabled = Boolean(process.env.HOMEPAGE_AUTH_ENABLED);
+const MIN_AUTH_SECRET_LENGTH = 32;
+
+const authEnabled = isAuthEnabled();
 const issuer = process.env.HOMEPAGE_OIDC_ISSUER;
 const clientId = process.env.HOMEPAGE_OIDC_CLIENT_ID;
 const clientSecret = process.env.HOMEPAGE_OIDC_CLIENT_SECRET;
@@ -62,6 +65,17 @@ if (authEnabled) {
   } else if (!homepageAuthPassword || !process.env.NEXTAUTH_SECRET) {
     throw new Error("Password auth is enabled but required settings are missing.");
   }
+
+  if (process.env.NEXTAUTH_SECRET.length < MIN_AUTH_SECRET_LENGTH) {
+    throw new Error(
+      `HOMEPAGE_AUTH_SECRET (or NEXTAUTH_SECRET) must be at least ${MIN_AUTH_SECRET_LENGTH} characters. Generate one with: openssl rand -base64 32`,
+    );
+  }
+}
+
+// Give fail2ban / CrowdSec etc something to match on
+function logFailedPasswordSignIn() {
+  createLogger("nextauth").warn("Failed password sign-in attempt");
 }
 
 let providers = [];
@@ -73,7 +87,7 @@ if (authEnabled) {
         name: process.env.HOMEPAGE_OIDC_NAME || "Homepage OIDC",
         type: "oauth",
         idToken: true,
-        checks: ["pkce", "state"],
+        checks: ["pkce", "state", "nonce"],
         issuer: cleanedIssuer,
         wellKnown: `${cleanedIssuer}/.well-known/openid-configuration`,
         clientId,
@@ -103,11 +117,13 @@ if (authEnabled) {
         async authorize(credentials) {
           const provided = credentials?.password;
           if (!homepageAuthPasswordDigest || typeof provided !== "string") {
+            logFailedPasswordSignIn();
             return null;
           }
           const providedDigest = createHash("sha256").update(provided, "utf8").digest();
           const isMatch = timingSafeEqual(providedDigest, homepageAuthPasswordDigest);
           if (!isMatch) {
+            logFailedPasswordSignIn();
             return null;
           }
           return {
@@ -142,4 +158,13 @@ export const authOptions = {
   },
 };
 
-export default NextAuth(authOptions);
+const nextAuthHandler = NextAuth(authOptions);
+
+export default async function handler(req, res) {
+  // Just pass empty session if auth not enabled
+  if (!authEnabled) {
+    return res.status(200).json({});
+  }
+
+  return nextAuthHandler(req, res);
+}
